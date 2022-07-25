@@ -376,7 +376,7 @@ export class KangoJS {
         for (const eventHandlerMetadata of eventHandlers) {
           const eventHandler = controllerInstance[eventHandlerMetadata.methodName].bind(controllerInstance);
 
-          if (eventHandlerMetadata.eventHandlerDefinition.bodyShape) {
+          if (eventHandlerMetadata.eventHandlerDefinition.dataShape) {
             if (!this.webSocketDataValidator) {
               throw new Error(`Not webSocketDataValidator has been defined but validation is required by: ${eventHandlerMetadata.eventHandlerDefinition.event} (${controllerNamespace})`);
             }
@@ -386,7 +386,7 @@ export class KangoJS {
               eventHandlerMetadata.eventHandlerDefinition.event,
               async (payload, callback) => {
                 const result = await dataValidator.validate(
-                  eventHandlerMetadata.eventHandlerDefinition.bodyShape,
+                  eventHandlerMetadata.eventHandlerDefinition.dataShape,
                   payload
                 );
 
@@ -406,7 +406,7 @@ export class KangoJS {
                   }
                 }
 
-                eventHandler(payload, callback);
+                eventHandler(socket, payload, callback);
               }
             );
           }
@@ -415,7 +415,7 @@ export class KangoJS {
             socket.on(
               eventHandlerMetadata.eventHandlerDefinition.event,
               (payload, callback) => {
-                eventHandler(payload, callback);
+                eventHandler(socket, payload, callback);
               }
             );
           }

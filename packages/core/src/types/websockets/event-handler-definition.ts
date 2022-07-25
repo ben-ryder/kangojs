@@ -4,5 +4,5 @@
  */
 export interface EventHandlerDefinition {
   event: string,
-  bodyShape?: any
+  dataShape?: any
 }
