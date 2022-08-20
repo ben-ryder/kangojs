@@ -9,8 +9,7 @@ import { RouteMetadata } from "./types/route/route-metadata";
 import { DependencyContainer, Instantiable } from "./utils/dependency-container";
 import {
   MiddlewareFactory,
-  MiddlewareFunction,
-  MiddlewareList,
+  MiddlewareFunction, MiddlewareList,
   RequestValidator,
   ValidatorFunction
 } from "./types/middleware/middleware-interface";
@@ -86,14 +85,14 @@ export class KangoJS {
       });
     }
 
-    const middlewareLists = this.processMiddleware(options.middleware);
-
     // Setup common middleware for request parsing etc
     useCommonMiddleware(this.app, this.commonMiddlewareOptions);
 
-    // Add "before-controllers" middlewares
-    for (const middleware of middlewareLists.beforeControllers) {
-      this.addMiddleware(middleware);
+    // Add before controller middlewares
+    if (options.middleware && options.middleware.beforeControllers) {
+      for (const middleware of options.middleware.beforeControllers) {
+        this.addAppMiddleware(middleware);
+      }
     }
 
     // Process controller routes
@@ -109,9 +108,11 @@ export class KangoJS {
       this.app.use(this.router);
     }
 
-    // Add "after-controllers" middlewares
-    for (const middleware of middlewareLists.beforeControllers) {
-      this.addMiddleware(middleware);
+    // Add after controller middlewares
+    if (options.middleware && options.middleware.afterControllers) {
+      for (const middleware of options.middleware.afterControllers) {
+        this.addAppMiddleware(middleware);
+      }
     }
 
     // Setup 404 fallback middleware
@@ -140,11 +141,18 @@ export class KangoJS {
     const controllerInstance = this.dependencyContainer.useDependency<typeof controller>(controller);
 
     // Setup controller routes.
-    const controllerGlobalRoute = <string> Reflect.getMetadata(MetadataKeys.ROUTE_PREFIX, controller);
-    const controllerRoutes = <Array<RouteMetadata>> Reflect.getMetadata(MetadataKeys.ROUTES, controller);
+    const controllerGlobalRoute = <string> Reflect.getMetadata(MetadataKeys.CONTROLLER_PATH, controller);
+    const controllerRoutes = <Array<RouteMetadata>> Reflect.getMetadata(MetadataKeys.CONTROLLER_ROUTES, controller);
 
     if (!controllerGlobalRoute || !controllerRoutes) {
       throw new Error("Supplied controller does not appear to be decorated correctly.");
+    }
+
+    const middlewareList = <MiddlewareList> Reflect.getMetadata(MetadataKeys.MIDDLEWARE_LIST, controller);
+    const controllerMiddleware: MiddlewareFunction[] = [];
+    for (const middleware of middlewareList) {
+      const middlewareFunction = this.getMiddlewareFunction(middleware);
+      controllerMiddleware.push(middlewareFunction);
     }
 
     for (const route of controllerRoutes) {
@@ -160,7 +168,7 @@ export class KangoJS {
         routePath += route.routeDefinition.path;
       }
 
-      const routeMiddleware: MiddlewareFunction[] = [];
+      const routeMiddleware: MiddlewareFunction[] = [...controllerMiddleware];
 
       // Routes must explicitly set authRequired=false to disable route protection.
       // This ensures no route is accidentally left unprotected.
@@ -214,6 +222,13 @@ export class KangoJS {
         }
         else {
           throw new Error(`No params validator registered but validation is required by ${routePath}`);
+        }
+      }
+
+      if (route.routeDefinition.middleware) {
+        for (const middleware of route.routeDefinition.middleware) {
+          const middlewareFunction = this.getMiddlewareFunction(middleware);
+          routeMiddleware.push(middlewareFunction);
         }
       }
 
@@ -294,33 +309,17 @@ export class KangoJS {
     this.app.use(errorHandlerMiddleware);
   }
 
-  private processMiddleware(middlewareList?: MiddlewareList): {beforeControllers: MiddlewareList, afterControllers: MiddlewareList} {
-    const before: MiddlewareList = [];
-    const after: MiddlewareList = [];
-
-    if (middlewareList && middlewareList.length > 0) {
-      for (const middleware of middlewareList) {
-        const middlewareConfig = <MiddlewareConfig> Reflect.getMetadata(MetadataKeys.MIDDLEWARE_CONFIG, middleware.prototype);
-        if (!middlewareConfig) {
-          throw new Error("You can't use a middleware that isn't marked with @Middleware");
-        }
-
-        if (middlewareConfig.layer === "before-controllers") {
-          before.push(middleware);
-        }
-        else {
-          after.push(middleware);
-        }
-      }
+  private getMiddlewareFunction(middleware: Instantiable<MiddlewareFactory>) {
+    const middlewareConfig = <MiddlewareConfig> Reflect.getMetadata(MetadataKeys.MIDDLEWARE_CONFIG, middleware.prototype);
+    if (!middlewareConfig) {
+      throw new Error("You can't use a middleware that isn't marked with @Middleware");
     }
 
-    return {
-      beforeControllers: before,
-      afterControllers: after
-    };
+    const middlewareInstance = this.dependencyContainer.useDependency<MiddlewareFactory>(middleware);
+    return middlewareInstance.run.bind(middlewareInstance);
   }
 
-  private addMiddleware(middleware: Instantiable<MiddlewareFactory>) {
+  private addAppMiddleware(middleware: Instantiable<MiddlewareFactory>) {
     const middlewareConfig = <MiddlewareConfig> Reflect.getMetadata(MetadataKeys.MIDDLEWARE_CONFIG, middleware.prototype);
     if (!middlewareConfig) {
       throw new Error("You can't use a middleware that isn't marked with @Middleware");

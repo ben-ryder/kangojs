@@ -1,7 +1,6 @@
-import {Instantiable, StoredDependency} from "../utils/dependency-container";
+import {Instantiable} from "../utils/dependency-container";
 import {
   MiddlewareFactory,
-  MiddlewareFunction,
   MiddlewareList,
   RequestValidator
 } from "./middleware/middleware-interface";
@@ -19,7 +18,10 @@ export interface DependencyOverride<T> {
  */
 export interface KangoJSOptions {
   controllers: Instantiable<any>[],
-  middleware?: MiddlewareList;
+  middleware?: {
+    beforeControllers?: MiddlewareList;
+    afterControllers?: MiddlewareList
+  };
   dependencyOverrides?: DependencyOverride<any>[];
   globalPrefix?: string;
   authValidator?: Instantiable<MiddlewareFactory>;

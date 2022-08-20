@@ -1,14 +1,11 @@
 import { MetadataKeys } from "./metadata-keys";
 
-export type MiddlewareLayer = "before-controllers" | "after-controllers";
-
 /**
  * Defines the configuration allowed for the @Middleware decorator.
  */
 export interface MiddlewareConfig {
   identifier?: string;
   route?: string;
-  layer?: MiddlewareLayer
 }
 
 /**
@@ -23,8 +20,5 @@ export function Middleware(config?: MiddlewareConfig) {
       ? Symbol.for(config.identifier)
       : Symbol.for(target.toString());
     Reflect.defineMetadata(MetadataKeys.DEPENDENCY_KEY, dependencyKey, target.prototype);
-
-    const middlewareConfig: MiddlewareConfig = config ?? {route: "/*", layer: "after-controllers"};
-    Reflect.defineMetadata(MetadataKeys.MIDDLEWARE_CONFIG, middlewareConfig, target.prototype);
   };
 }
