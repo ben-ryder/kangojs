@@ -20,5 +20,8 @@ export function Middleware(config?: MiddlewareConfig) {
       ? Symbol.for(config.identifier)
       : Symbol.for(target.toString());
     Reflect.defineMetadata(MetadataKeys.DEPENDENCY_KEY, dependencyKey, target.prototype);
+
+    const middlewareConfig: MiddlewareConfig = config ?? {route: "/*"};
+    Reflect.defineMetadata(MetadataKeys.MIDDLEWARE_CONFIG, middlewareConfig, target.prototype);
   };
 }

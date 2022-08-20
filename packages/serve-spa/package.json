@@ -31,6 +31,6 @@
     "express": "^4.17.2"
   },
   "dependencies": {
-    "@kangojs/core": "^2.0.0-alpha.2"
+    "@kangojs/core": "^2.0.0-alpha.15"
   }
 }
