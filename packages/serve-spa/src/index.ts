@@ -12,8 +12,7 @@ import {HTTPStatusCodes, Instantiable, Middleware, MiddlewareFactory} from "@kan
 export function createServeSPAMiddleware(options: UseServeSPAOptions): Instantiable<MiddlewareFactory> {
   @Middleware({
     identifier: "serve-spa-middleware",
-    route: "/*",
-    layer: "after-controllers"
+    route: "/*"
   })
   class ServeSpaMiddleware implements MiddlewareFactory {
     run(req: Request, res: Response, next: NextFunction): any {
