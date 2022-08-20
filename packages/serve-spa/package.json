@@ -1,6 +1,6 @@
 {
   "name": "@kangojs/serve-spa",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-alpha.2",
   "description": "Serve single page applications from your Express app.",
   "author": "Ben-Ryder <dev@benryder.me> (https://www.benryder.me)",
   "homepage": "https://github.com/kangojs/kangojs/tree/main/packages/serve-spa",
