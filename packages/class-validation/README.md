@@ -37,32 +37,29 @@ so you must install these two peer dependencies yourself in order to use this pa
 As `@kangojs/class-validation` has been built specifically for use with KangoJS it's pretty much just a case of dropping it in.  
 
 ### Setup Validation Middleware
-When setting up KangoJS you can simply pass the results of `createBodyValidator` and `createQueryValidator` into the configuration options like so:
+When setting up KangoJS you can simply add `ClassValidator` to the validator options you require:
 
 ```typescript
 import express from 'express';
 import { KangoJS } from '@kangojs/core';
-import { createBodyValidator, createQueryValidator, createParamsValidator } from "@kangojs/class-validation";
+import { ClassValidator } from "@kangojs/class-validation";
 
 const app = express();
 
 const kangoJS = new KangoJS({
     controllerFilesGlob: "src/modules/*.controller.ts",
     globalPrefix: "/api/v1",
-    bodyValidator: createBodyValidator(),
-    queryValidator: createQueryValidator(),
-    paramsValidator: createParamsValidator(),
+    bodyValidator: ClassValidator,
+    queryValidator: ClassValidator,
+    paramsValidator: ClassValidator,
+    webSocketDataValidator: ClassValidator,
 });
 await kangoJS.boostrap(app);
 ```
 
-You can also pass options to the create validator functions. Here are the possible options:
+You can also customise the options for class-transformer and class-validator like so:
+- TODO: feature doesn't have good DX with KangoJS v2
 
-| Attribute | Type | Description |
-| --- | --- | --- |
-| `classTransformerOptions` | `TransformerOptions` (from class-transformer) | Options for class-transformer |
-| `classValidatorOptions` | `ValidatorOptions` (from class-validator) | Options for class-validator |
-| `errorHandler` | `(error: Error, res?: Response) => Promise<void>` | Allows you to overwrite the default behaviour on validation error. |
 
 ### Add Request Validation
 Create a class DTO using class-validator. For example:

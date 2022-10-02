@@ -7,6 +7,7 @@ import {
 import {CommonMiddlewareOptions} from "./middleware/common-middleware-options";
 import {RouteNotFoundOptions} from "./middleware/route-not-found-options";
 import {ErrorHandlerConfig} from "../utils/error-handler";
+import {SocketMiddlewareFactory} from "./websockets/ws-middlware-interface";
 
 export interface DependencyOverride<T> {
   original: Instantiable<T>;
@@ -31,4 +32,7 @@ export interface KangoJSOptions {
   commonMiddlewareOptions?: CommonMiddlewareOptions;
   routeNotFoundOptions?: RouteNotFoundOptions;
   errorHandlerConfig?: ErrorHandlerConfig;
+  webSocketAuthValidator?: Instantiable<SocketMiddlewareFactory>;
+  webSocketDataValidator?: Instantiable<RequestValidator>;
+  webSocketControllers?: Instantiable<any>[],
 }

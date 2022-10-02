@@ -1,10 +1,14 @@
 export * from "./kangojs";
 
+export * from "./base/base-service";
+
 export * from "./decorators/controller.decorator";
 export * from "./decorators/injectable.decorator";
 export * from "./decorators/metadata-keys";
 export * from "./decorators/middleware.decorator";
+export * from "./decorators/on-socket-event.decoractor";
 export * from "./decorators/route.decorator";
+export * from "./decorators/ws-controller.decoractor";
 
 export * from "./enums/http-status-codes";
 export * from "./enums/http-methods";
@@ -34,6 +38,9 @@ export * from "./types/middleware/middleware-interface";
 export * from "./types/middleware/route-not-found-options";
 export * from "./types/route/route-definition";
 export * from "./types/route/route-metadata";
+export * from "./types/websockets/event-handler-definition";
+export * from "./types/websockets/event-handler-metadata";
+export * from "./types/websockets/ws-middlware-interface";
 
 export * from "./utils/dependency-container";
 export * from "./utils/error-handler";

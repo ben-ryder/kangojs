@@ -1,6 +1,7 @@
 import "reflect-metadata";
 
 import express, {Application, NextFunction, Request, Response, Router} from "express";
+import {Server} from "socket.io";
 
 import { KangoJSOptions } from "./types/kangojs-options";
 import { MetadataKeys } from "./decorators/metadata-keys";
@@ -23,6 +24,9 @@ import {ErrorResponseManager} from "./utils/error-response-manager";
 import {MiddlewareConfig} from "./decorators/middleware.decorator";
 import {HTTPStatusCodes} from "./enums/http-status-codes";
 import {ErrorIdentifiers} from "./errors/error-identifiers";
+import {SocketMiddlewareFactory} from "./types/websockets/ws-middlware-interface";
+import {EventHandlerMetadata} from "./types/websockets/event-handler-metadata";
+
 
 /**
  * The main object that encapsulates and manages all framework features.
@@ -30,7 +34,15 @@ import {ErrorIdentifiers} from "./errors/error-identifiers";
 export class KangoJS {
   private readonly app: Application;
   private readonly router: Router;
+  // todo: add config for server cors
+  private readonly io: Server = new Server({
+    cors: {
+      origin: "http://localhost:3000"
+    }
+  });
+
   readonly dependencyContainer: DependencyContainer;
+
   private readonly globalPrefix?: string;
   private readonly authValidator?: Instantiable<MiddlewareFactory>;
   private readonly bodyValidator?: Instantiable<RequestValidator>;
@@ -39,6 +51,9 @@ export class KangoJS {
   private readonly commonMiddlewareOptions?: CommonMiddlewareOptions;
   private readonly routeNotFoundOptions?: RouteNotFoundOptions;
   private readonly errorHandlerConfig?: ErrorHandlerConfig;
+  private readonly webSocketAuthValidator?: Instantiable<SocketMiddlewareFactory>;
+  private readonly webSocketDataValidator?: Instantiable<RequestValidator>;
+  private readonly webSocketControllers: Instantiable<any>[];
 
   /**
    * The object constructor.
@@ -49,6 +64,7 @@ export class KangoJS {
     this.app = express();
     this.router = Router();
     this.dependencyContainer = new DependencyContainer();
+    this.webSocketControllers = options.webSocketControllers || [];
 
     this.globalPrefix = options.globalPrefix || undefined;
     this.authValidator = options.authValidator || undefined;
@@ -120,14 +136,21 @@ export class KangoJS {
 
     // Setup error handling
     this.setupErrorHandling();
+
+    // Setup Web Sockets
+    this.setupWebSockets();
   }
 
-  getApp(): Application {
+  getExpressApp(): Application {
     return this.app;
   }
 
-  getRouter(): Router {
+  getExpressRouter(): Router {
     return this.router;
+  }
+
+  getSocketServer(): Server {
+    return this.io;
   }
 
   /**
@@ -328,5 +351,75 @@ export class KangoJS {
     const middlewareInstance = this.dependencyContainer.useDependency<MiddlewareFactory>(middleware);
     const middlewareFunction = middlewareInstance.run.bind(middlewareInstance);
     this.app.use(middlewareConfig.route ?? "/*", middlewareFunction);
+  }
+
+  setupWebSockets() {
+    // Setup auth middleware if it's been declared
+    if (this.webSocketAuthValidator) {
+      const validatorInstance = this.dependencyContainer.useDependency(this.webSocketAuthValidator);
+      this.io.use(validatorInstance.run.bind(validatorInstance));
+    }
+
+    for (const webSocketController of this.webSocketControllers) {
+      const controllerInstance = this.dependencyContainer.useDependency<any>(webSocketController);
+
+      // Setup controller routes.
+      const controllerNamespace = <string> Reflect.getMetadata(MetadataKeys.WEB_SOCKET_NAMESPACE, webSocketController);
+      const eventHandlers = <Array<EventHandlerMetadata>> Reflect.getMetadata(MetadataKeys.WEB_SOCKET_EVENT_HANDLERS, webSocketController);
+
+      if (!controllerNamespace || !(Array.isArray(eventHandlers))) {
+        throw new Error("Supplied websocket controller does not appear to be decorated correctly.");
+      }
+
+      this.io.of(controllerNamespace).on("connection", (socket => {
+        for (const eventHandlerMetadata of eventHandlers) {
+          const eventHandler = controllerInstance[eventHandlerMetadata.methodName].bind(controllerInstance);
+
+          if (eventHandlerMetadata.eventHandlerDefinition.dataShape) {
+            if (!this.webSocketDataValidator) {
+              throw new Error(`Not webSocketDataValidator has been defined but validation is required by: ${eventHandlerMetadata.eventHandlerDefinition.event} (${controllerNamespace})`);
+            }
+
+            const dataValidator = this.dependencyContainer.useDependency(this.webSocketDataValidator);
+            socket.on(
+              eventHandlerMetadata.eventHandlerDefinition.event,
+              async (payload, callback) => {
+                const result = await dataValidator.validate(
+                  eventHandlerMetadata.eventHandlerDefinition.dataShape,
+                  payload
+                );
+
+                if (typeof result === "boolean") {
+                  if (!result) {
+                    return callback({
+                      status: "Validation Error"
+                    });
+                  }
+                }
+                else {
+                  if (!result.valid) {
+                    return callback({
+                      status: "Validation Error",
+                      reason: result.failReason
+                    });
+                  }
+                }
+
+                eventHandler(socket, payload, callback);
+              }
+            );
+          }
+          else {
+            // If no data validator is setup then directly add the method
+            socket.on(
+              eventHandlerMetadata.eventHandlerDefinition.event,
+              (payload, callback) => {
+                eventHandler(socket, payload, callback);
+              }
+            );
+          }
+        }
+      }));
+    }
   }
 }
