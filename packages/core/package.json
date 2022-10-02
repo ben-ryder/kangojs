@@ -1,6 +1,6 @@
 {
   "name": "@kangojs/core",
-  "version": "2.0.0-alpha.16",
+  "version": "2.0.0-alpha.17",
   "description": "An Express framework to make writing typescript express apps quicker and easier.",
   "author": "Ben-Ryder <dev@benryder.me> (https://www.benryder.me)",
   "homepage": "https://github.com/kangojs/kangojs/tree/main/packages/core",
