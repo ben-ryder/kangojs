@@ -7,6 +7,7 @@ export * from "./decorators/injectable.decorator";
 export * from "./decorators/metadata-keys";
 export * from "./decorators/middleware.decorator";
 export * from "./decorators/on-socket-event.decoractor";
+export * from "./decorators/on-socket-connection.decoractor";
 export * from "./decorators/route.decorator";
 export * from "./decorators/ws-controller.decoractor";
 

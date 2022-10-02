@@ -3,7 +3,7 @@ import {Socket} from "socket.io";
 /**
  * Next function used in Socket.io middlewares.
  */
-export type SocketNextFunction = () => void;
+export type SocketNextFunction = (err?: Error) => void;
 
 /**
  * Socket middleware function.

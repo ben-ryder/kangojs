@@ -361,17 +361,21 @@ export class KangoJS {
     }
 
     for (const webSocketController of this.webSocketControllers) {
-      const controllerInstance = this.dependencyContainer.useDependency<any>(webSocketController);
-
-      // Setup controller routes.
-      const controllerNamespace = <string> Reflect.getMetadata(MetadataKeys.WEB_SOCKET_NAMESPACE, webSocketController);
-      const eventHandlers = <Array<EventHandlerMetadata>> Reflect.getMetadata(MetadataKeys.WEB_SOCKET_EVENT_HANDLERS, webSocketController);
-
-      if (!controllerNamespace || !(Array.isArray(eventHandlers))) {
+      const identifier = <string> Reflect.getMetadata(MetadataKeys.DEPENDENCY_KEY, webSocketController);
+      if (!identifier) {
         throw new Error("Supplied websocket controller does not appear to be decorated correctly.");
       }
 
-      this.io.of(controllerNamespace).on("connection", (socket => {
+      const controllerInstance = this.dependencyContainer.useDependency<any>(webSocketController);
+      const controllerNamespace = <string> Reflect.getMetadata(MetadataKeys.WEB_SOCKET_NAMESPACE, webSocketController);
+      const eventHandlers = <Array<EventHandlerMetadata>> Reflect.getMetadata(MetadataKeys.WEB_SOCKET_EVENT_HANDLERS, webSocketController);
+      const connectionMethod = Reflect.getMetadata(MetadataKeys.WEB_SOCKET_CONNECTION_HANDLER, webSocketController);
+
+      this.io.of(controllerNamespace || "/").on("connection", (socket => {
+        if (connectionMethod) {
+          controllerInstance[connectionMethod](socket, this.io);
+        }
+
         for (const eventHandlerMetadata of eventHandlers) {
           const eventHandler = controllerInstance[eventHandlerMetadata.methodName].bind(controllerInstance);
 
@@ -405,16 +409,16 @@ export class KangoJS {
                   }
                 }
 
-                eventHandler(socket, payload, callback);
+                eventHandler(socket, this.io, payload, callback);
               }
             );
           }
           else {
-            // If no data validator is setup then directly add the method
+            // If no data validator is set up then directly add the method
             socket.on(
               eventHandlerMetadata.eventHandlerDefinition.event,
               (payload, callback) => {
-                eventHandler(socket, payload, callback);
+                eventHandler(socket, this.io, payload, callback);
               }
             );
           }
