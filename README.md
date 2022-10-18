@@ -15,6 +15,17 @@
 </div>
 </div>
 
+---
+
+**⚠️ Project Unmaintained️ ⚠️**  
+This project is not currently being maintained.  
+One of the primary goals of KangoJS was for me to experiment with dependency injection, decorators, publishing NPM packages etc and I've now done all these things.  
+I'm currently of the view that further work on this project is not worth the time when better alternatives exist like [NestJS](https://nestjs.com/). I've learnt how the wheel can be made, there's no point continuing to re-invent it!
+
+I may come back to this project in the future or just fully unpublish the NPM modules and move/repurpose this GH org, I've not decided yet.
+
+---
+
 ## 🤔 About
 KangoJS was created because I was finding myself copying and pasting the same core functionality across a number of Express projects and I wanted
 a better way to manage this.  

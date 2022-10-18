@@ -12,6 +12,12 @@
 </div>
 </div>
 
+---
+
+**⚠️ Package Unmaintained️**: This package is not currently being maintained, for more information [check the Github](https://github.com/kangojs/kangojs).
+
+---
+
 ## 🤔 About
 Easily transform and validate Express request data using classes with [class-transformer](https://www.npmjs.com/package/class-transformer) and  [class-validator](https://www.npmjs.com/package/class-validator).
 

@@ -12,6 +12,12 @@
 </div>
 </div>
 
+---
+
+**⚠️ Package Unmaintained️**: This package is not currently being maintained, for more information [check the Github](https://github.com/kangojs/kangojs).
+
+---
+
 ## 🤔 About
 `@kangojs/core` is the core package for [KangoJS](https://github.com/kangojs/kangojs) and provides the base framework functionality.  
 

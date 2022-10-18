@@ -12,6 +12,12 @@
 </div>
 </div>
 
+---
+
+**⚠️ Package Unmaintained️**: This package is not currently being maintained, for more information [check the Github](https://github.com/kangojs/kangojs).
+
+---
+
 ## 🤔 About
 Serve single page applications such as React from your Express app.  
 Simply import the package and point it at your apps build directory and Express will start serving it.

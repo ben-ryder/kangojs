@@ -12,6 +12,12 @@
 </div>
 </div>
 
+---
+
+**⚠️ Package Unmaintained️**: This package is not currently being maintained, for more information [check the Github](https://github.com/kangojs/kangojs).
+
+---
+
 ## 🤔 About
 This packages provides a KangoJS validator for validating data using the [Zod](https://github.com/colinhacks/zod) validation library.
 
